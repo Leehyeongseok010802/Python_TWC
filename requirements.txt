@@ -1,0 +1,14 @@
+selenium==4.10.0
+chromedriver-autoinstaller
+pandas
+redis
+kiwipiepy
+python-dotenv
+nbconvert==6.5.4
+papermill
+jupyter
+jupyterlab
+beautifulsoup4
+lxml[html_clean]
+ipykernel
+webdriver-manager
