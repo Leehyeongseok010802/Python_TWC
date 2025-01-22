@@ -1,0 +1,77 @@
+---
+name: twc python workflow
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"  # 3시간마다 실행
+  workflow_dispatch:        # 수동 실행 버튼 추가
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. 기존 데이터 초기화
+      - name: Initialize Completed_csv folder
+        run: |
+          if [ -d "./Completed_csv" ]; then
+            rm -rf ./Completed_csv  # 기존 폴더 삭제
+          fi
+          mkdir ./Completed_csv  # 새로운 폴더 생성
+
+      # 3. Python 설치
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      # 4. ChromeDriver 설치
+      - name: Install ChromeDriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget -N https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip
+          unzip chromedriver_linux64.zip
+          sudo mv chromedriver /usr/local/bin/
+          sudo chmod +x /usr/local/bin/chromedriver
+
+      # 5. Google Chrome 설치
+      - name: Install Google Chrome
+        run: |
+          sudo apt-get install -y software-properties-common
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list'
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          
+      # 6. 의존성 설치
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 7. Jupyter Notebook 커널 초기화
+      - name: Initialize Jupyter Kernel
+        run: |
+          python -m ipykernel install --user --name=python3
+
+      # 8. 크롤링 실행
+      - name: Run Crawling Notebooks
+        run: |
+          python run_crowling.py
+
+      # 9. 키워드 분석 및 Redis 저장 실행
+      - name: Run Keyword Extraction
+        env:
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          REDIS_USERNAME: ${{ secrets.REDIS_USERNAME }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+        run: |
+          jupyter nbconvert \
+            --to notebook \
+            --execute keyword_extraction/kiwi_redis.ipynb
