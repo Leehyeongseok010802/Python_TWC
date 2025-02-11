@@ -12,6 +12,16 @@ jobs:
       contents: write
 
     steps:
+      # 🔹 실행 전 리소스 체크
+      - name: Check system resources (Before Execution)
+        run: |
+          echo "==== [Before] Disk Usage ===="
+          df -h
+          echo "==== [Before] Memory Usage ===="
+          free -h
+          echo "==== [Before] CPU Load ===="
+          top -bn1 | head -n 10
+
       # 1. 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v3
@@ -87,3 +97,13 @@ jobs:
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 🔹 실행 후 리소스 체크
+      - name: Check system resources (After Execution)
+        run: |
+          echo "==== [After] Disk Usage ===="
+          df -h
+          echo "==== [After] Memory Usage ===="
+          free -h
+          echo "==== [After] CPU Load ===="
+          top -bn1 | head -n 10
