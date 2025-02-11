@@ -3,7 +3,9 @@ name: twc python workflow
 
 on:
   workflow_dispatch:        # 수동 실행 버튼 추가
-
+  schedule:
+    - cron: "0 9,21 * * *"  # UTC 기준으로 9시, 21시에 실행 (한국 시간 기준 9시, 21시)
+    
 jobs:
   run-tests:
     runs-on: ubuntu-latest
